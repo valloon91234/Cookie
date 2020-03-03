@@ -65,8 +65,10 @@
     <Compile Include="CookieRetrievalFlags.cs" />
     <Compile Include="dao\BaseChrome.cs" />
     <Compile Include="dao\Brave.cs" />
-    <Compile Include="dao\ChromeSogou.cs" />
+    <Compile Include="dao\ChromeCore.cs" />
     <Compile Include="dao\Chrome360.cs" />
+    <Compile Include="dao\ChromeSogou.cs" />
+    <Compile Include="dao\Chrome360se6.cs" />
     <Compile Include="dao\Chrome.cs" />
     <Compile Include="dao\Cookie.cs" />
     <Compile Include="dao\Firefox.cs" />

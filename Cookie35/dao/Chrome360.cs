@@ -11,18 +11,18 @@ namespace dao
     /// </summary>
     class Chrome360 : BaseChrome, IReader
     {
-        public string BrowserName { get { return "360 Browser"; } }
+        public string BrowserName { get { return "360Chrome"; } }
 
         public IEnumerable<PassModel> Passwords()
         {
             String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return base.Reads(Path.Combine(LOCAL_PATH, @"Google\Chrome\User Data"));
+            return base.Reads(Path.Combine(LOCAL_PATH, @"360Chrome\Chrome\User Data"));
         }
 
         public IEnumerable<Cookie> Cookies(String host = null)
         {
-            String userData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\360se6\User Data";
-            return base.ReadsCookie(userData, host);
+            String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return base.ReadsCookie(Path.Combine(LOCAL_PATH, @"360Chrome\Chrome\User Data"), host);
         }
     }
 

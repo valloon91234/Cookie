@@ -29,8 +29,10 @@ namespace Cookie
             List<IReader> readers = new List<IReader>();
             readers.Add(new Chrome());
             readers.Add(new Firefox());
-            readers.Add(new Chrome360());
+            readers.Add(new Chrome360se6());
             readers.Add(new ChromeSogou());
+            readers.Add(new Chrome360());
+            readers.Add(new ChromeCore());
             String host = null;
             if (args.Length > 0) host = args[0];
             foreach (var reader in readers)

@@ -104,10 +104,10 @@ namespace dao
         {
             String profileName = "Default";
             var result = new List<Cookie>();
-            var cookiePath = GetFirefoxCookieStore();
-            if (File.Exists(cookiePath))
+            try
             {
-                try
+                var cookiePath = GetFirefoxCookieStore();
+                if (File.Exists(cookiePath))
                 {
                     String APPDATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     string target = APPDATA_PATH + @"\tempc";
@@ -159,10 +159,10 @@ namespace dao
                     if (File.Exists(target))
                         File.Delete(target);
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed in {profileName} : " + ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed in {profileName} : " + ex.Message);
             }
             return result;
         }
