@@ -1,0 +1,6 @@
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\obj\Release\Cookie35.csprojAssemblyReference.cache
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\bin\Release\Cookie35.exe.config
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\bin\Release\Cookie35.exe
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\bin\Release\Cookie35.pdb
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\obj\Release\Cookie35.exe
+D:\Workspace\Visual Studio 2019\Cookie\Cookie35\obj\Release\Cookie35.pdb

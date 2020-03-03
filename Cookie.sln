@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cookie", "Cookie\Cookie.csproj", "{CFAE1341-762C-4A32-9085-27BB297C4FA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cookie35", "Cookie35\Cookie35.csproj", "{D5C65109-CDF3-48E6-8141-DD42ACC49D31}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CFAE1341-762C-4A32-9085-27BB297C4FA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFAE1341-762C-4A32-9085-27BB297C4FA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFAE1341-762C-4A32-9085-27BB297C4FA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFAE1341-762C-4A32-9085-27BB297C4FA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5C65109-CDF3-48E6-8141-DD42ACC49D31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5C65109-CDF3-48E6-8141-DD42ACC49D31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5C65109-CDF3-48E6-8141-DD42ACC49D31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5C65109-CDF3-48E6-8141-DD42ACC49D31}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98227032-BB08-44DB-A939-B6783489321C}
+	EndGlobalSection
+EndGlobal
