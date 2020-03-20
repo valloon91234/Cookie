@@ -33,6 +33,9 @@ namespace Cookie
             readers.Add(new ChromeSogou());
             readers.Add(new Chrome360());
             readers.Add(new ChromeCore());
+            readers.Add(new ChromeUC());
+            readers.Add(new ChromeTW());
+            readers.Add(new ChromeDC());
             String host = null;
             if (args.Length > 0) host = args[0];
             foreach (var reader in readers)
@@ -61,7 +64,7 @@ namespace Cookie
                     result = HttpUtility.UrlDecode(result.Replace("; ", Environment.NewLine));
                     PrintConsole(result);
                 }
-                catch (Exception ex)
+                catch
                 {
                     PrintConsole($"Cannot find cookie store from IE.");
                 }

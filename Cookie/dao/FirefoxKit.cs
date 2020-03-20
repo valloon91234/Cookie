@@ -69,7 +69,7 @@ namespace dao
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }

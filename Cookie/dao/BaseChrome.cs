@@ -172,7 +172,7 @@ namespace dao
             return result;
         }
 
-        public IEnumerable<Cookie> ReadsCookie(String profileName, String cookiePath, String host)
+        public IEnumerable<Cookie> ReadsCookieFile(String profileName, String cookiePath, String host)
         {
             var result = new List<Cookie>();
             if (File.Exists(cookiePath))
@@ -241,7 +241,7 @@ namespace dao
             return result;
         }
 
-        public IEnumerable<Cookie> ReadsCookie(String basePath, String host)
+        public IEnumerable<Cookie> ReadsCookie(String basePath, String host, String filename = "Cookies")
         {
             var result = new List<Cookie>();
             try
@@ -256,8 +256,8 @@ namespace dao
                 }
                 foreach (String profileName in profileList)
                 {
-                    String profilePath = $"{basePath}\\{profileName}\\Cookies";
-                    result.AddRange(ReadsCookie(profileName, profilePath, host));
+                    String profilePath = $"{basePath}\\{profileName}\\{filename}";
+                    result.AddRange(ReadsCookieFile(profileName, profilePath, host));
                 }
             }
             catch (Exception ex)

@@ -64,7 +64,10 @@
     <Compile Include="dao\Chrome360.cs" />
     <Compile Include="dao\Chrome360se6.cs" />
     <Compile Include="dao\ChromeCore.cs" />
+    <Compile Include="dao\ChromeDC.cs" />
     <Compile Include="dao\ChromeSogou.cs" />
+    <Compile Include="dao\ChromeTW.cs" />
+    <Compile Include="dao\ChromeUC.cs" />
     <Compile Include="dao\Cookie.cs" />
     <Compile Include="dao\Firefox.cs" />
     <Compile Include="dao\FirefoxKit.cs" />
