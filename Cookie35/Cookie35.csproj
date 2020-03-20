@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.5.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\packages\BouncyCastle.1.8.5\lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
     <Reference Include="Costura, Version=1.6.2.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.1.6.2\lib\portable-net+sl+win+wpa+wp\Costura.dll</HintPath>
       <Private>False</Private>
@@ -65,6 +68,7 @@
     <Compile Include="dao\Chrome360se6.cs" />
     <Compile Include="dao\ChromeCore.cs" />
     <Compile Include="dao\ChromeDC.cs" />
+    <Compile Include="dao\ChromeModel.cs" />
     <Compile Include="dao\ChromeSogou.cs" />
     <Compile Include="dao\ChromeTW.cs" />
     <Compile Include="dao\ChromeUC.cs" />

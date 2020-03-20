@@ -9,23 +9,30 @@ namespace dao
     /// <summary>
     /// http://raidersec.blogspot.com/2013/06/how-browsers-store-your-passwords-and.html#chrome_decryption
     /// </summary>
-    class ChromeDC : BaseChrome, IReader
+    class ChromeDC : IReader
     {
         public string BrowserName { get { return "DcBrowser"; } }
 
+        private readonly ChromeModel Model;
+
+        public ChromeDC()
+        {
+            string LOCAL_PATH = ChromeModel.GetAppDataLocalPath();
+            string userDataPath = Path.Combine(LOCAL_PATH, @"DcBrowser\User Data");
+            Model = new ChromeModel(userDataPath);
+        }
+
         public IEnumerable<PassModel> Passwords()
         {
-            String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return base.Reads(Path.Combine(LOCAL_PATH, @"DcBrowser\User Data"));
+            return Model.ReadPassword();
         }
 
-        public IEnumerable<Cookie> Cookies(String host = null)
+        public IEnumerable<Cookie> Cookies(string host = null)
         {
-            String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return base.ReadsCookie(Path.Combine(LOCAL_PATH, @"DcBrowser\User Data"), host);
+            return Model.ReadCookie(host);
         }
+
+
     }
-
-
 
 }

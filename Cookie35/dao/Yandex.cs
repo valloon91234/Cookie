@@ -4,19 +4,27 @@ using System.IO;
 
 namespace dao
 {
-    class Yandex : BaseChrome, IReader
+    class Yandex : IReader
     {
         public string BrowserName { get { return "Yandex"; } }
 
-        public IEnumerable<Cookie> Cookies(string host = null)
+        private readonly ChromeModel Model;
+
+        public Yandex()
         {
-            throw new NotImplementedException();
+            string LOCAL_PATH = ChromeModel.GetAppDataLocalPath();
+            string userDataPath = Path.Combine(LOCAL_PATH, @"Yandex\YandexBrowser\User Data");
+            Model = new ChromeModel(userDataPath);
         }
 
         public IEnumerable<PassModel> Passwords()
         {
-            String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return base.Reads(Path.Combine(LOCAL_PATH, @"Yandex\YandexBrowser\User Data"));
+            return Model.ReadPassword();
+        }
+
+        public IEnumerable<Cookie> Cookies(string host = null)
+        {
+            return Model.ReadCookie(host);
         }
 
     }

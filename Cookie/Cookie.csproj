@@ -36,6 +36,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.5.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\packages\BouncyCastle.1.8.5\lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
     <Reference Include="Costura, Version=4.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.4.1.0\lib\net40\Costura.dll</HintPath>
     </Reference>
@@ -63,7 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CookieRetrievalFlags.cs" />
-    <Compile Include="dao\BaseChrome.cs" />
+    <Compile Include="dao\ChromeModel.cs" />
     <Compile Include="dao\Brave.cs" />
     <Compile Include="dao\ChromeDC.cs" />
     <Compile Include="dao\ChromeTW.cs" />

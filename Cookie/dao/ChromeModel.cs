@@ -10,14 +10,52 @@ using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Data.SQLite;
+using Newtonsoft.Json.Linq;
+using System.Linq;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto;
 
 namespace dao
 {
     /// <summary>
     /// http://raidersec.blogspot.com/2013/06/how-browsers-store-your-passwords-and.html#chrome_decryption
     /// </summary>
-    class BaseChrome
+    class ChromeModel
     {
+        public static string GetAppDataLocalPath()
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        }
+
+        public static string GetAppDataRoamingPath()
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+
+        public string UserDataPath { get; set; }
+
+        public ChromeModel(string userDataPath)
+        {
+            this.UserDataPath = userDataPath;
+        }
+
+        private string GetEncKey()
+        {
+            try
+            {
+                //string encKey = File.ReadAllText(Path.Combine(GetLocalAppDataPath(), @"Google\Chrome\User Data\Local State"));
+                string encKey = File.ReadAllText(Path.Combine(UserDataPath, @"Local State"));
+                encKey = JObject.Parse(encKey)["os_crypt"]["encrypted_key"].ToString();
+                return encKey;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
 #if USE_System_Data_Sqlite
         public IEnumerable<PassModel> Reads(String profileName, String logindataPath)
         {
@@ -90,7 +128,7 @@ namespace dao
             }
         }
 #else
-        public IEnumerable<PassModel> Reads(string profileName, string logindataPath)
+        public IEnumerable<PassModel> ReadPassword(string profileName, string logindataPath)
         {
             var result = new List<PassModel>();
             if (File.Exists(logindataPath))
@@ -145,29 +183,30 @@ namespace dao
         }
 #endif
 
-        public IEnumerable<PassModel> Reads(String basePath)
+        public IEnumerable<PassModel> ReadPassword()
         {
             var result = new List<PassModel>();
             try
             {
-                List<String> profileList = new List<string>();
-                profileList.Add("Default");
-                DirectoryInfo dInfo = new DirectoryInfo(basePath);
+                List<String> profileList = new List<string>
+                {
+                    "Default"
+                };
+                DirectoryInfo dInfo = new DirectoryInfo(UserDataPath);
                 DirectoryInfo[] dInfoArray = dInfo.GetDirectories("Profile *", SearchOption.TopDirectoryOnly);
                 foreach (DirectoryInfo d in dInfoArray)
                 {
                     profileList.Add(d.Name);
                 }
-
                 foreach (String profileName in profileList)
                 {
-                    String profilePath = $"{basePath}\\{profileName}\\Login Data";
-                    result.AddRange(Reads(profileName, profilePath));
+                    String profilePath = $"{UserDataPath}\\{profileName}\\Login Data";
+                    result.AddRange(ReadPassword(profileName, profilePath));
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed : {basePath} : " + ex.Message);
+                Debug.WriteLine($"Failed : {UserDataPath} : " + ex.Message);
             }
             return result;
         }
@@ -180,7 +219,7 @@ namespace dao
                 try
                 {
                     String APPDATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string target = APPDATA_PATH + @"\tempc";
+                    string target = APPDATA_PATH + @"\tempe";
                     if (File.Exists(target))
                         File.Delete(target);
                     File.Copy(cookiePath, target);
@@ -201,15 +240,17 @@ namespace dao
                                 cmd.Parameters.Add(prm);
                                 cmd.CommandText = "SELECT host_key,name,encrypted_value FROM cookies WHERE host_key = @hostName";
                             }
+                            string encKey = GetEncKey();
                             using (var reader = cmd.ExecuteReader())
                             {
                                 if (reader.HasRows)
                                 {
                                     while (reader.Read())
                                     {
+                                        var encryptedData = (byte[])reader[2];
+                                        var s = Encoding.ASCII.GetString(encryptedData);
                                         try
                                         {
-                                            var encryptedData = (byte[])reader[2];
                                             var decodedData = System.Security.Cryptography.ProtectedData.Unprotect(encryptedData, null, System.Security.Cryptography.DataProtectionScope.CurrentUser);
                                             var plainText = Encoding.ASCII.GetString(decodedData); // Looks like ASCII
                                             result.Add(new Cookie()
@@ -220,9 +261,24 @@ namespace dao
                                                 Value = plainText
                                             });
                                         }
-                                        catch (Exception ex)
+                                        catch
                                         {
-                                            Debug.WriteLine($"Failed in {profileName} : " + ex.Message);
+                                            try
+                                            {
+                                                var decodedKey = System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(encKey).Skip(5).ToArray(), null, System.Security.Cryptography.DataProtectionScope.LocalMachine);
+                                                var plainText = _decryptWithKey(encryptedData, decodedKey, 3);
+                                                result.Add(new Cookie()
+                                                {
+                                                    Profile = profileName,
+                                                    Url = reader.GetString(0),
+                                                    Name = reader.GetString(1),
+                                                    Value = plainText
+                                                });
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Debug.WriteLine(ex);
+                                            }
                                         }
                                     }
                                 }
@@ -235,20 +291,20 @@ namespace dao
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Failed in {profileName} : " + ex.Message);
+                    Console.WriteLine($"Failed in {profileName} : " + ex.Message);
                 }
             }
             return result;
         }
 
-        public IEnumerable<Cookie> ReadsCookie(String basePath, String host, String filename = "Cookies")
+        public IEnumerable<Cookie> ReadCookie(String host, String filename = "Cookies")
         {
             var result = new List<Cookie>();
             try
             {
                 List<String> profileList = new List<string>();
                 profileList.Add("Default");
-                DirectoryInfo dInfo = new DirectoryInfo(basePath);
+                DirectoryInfo dInfo = new DirectoryInfo(UserDataPath);
                 DirectoryInfo[] dInfoArray = dInfo.GetDirectories("Profile *", SearchOption.TopDirectoryOnly);
                 foreach (DirectoryInfo d in dInfoArray)
                 {
@@ -256,15 +312,49 @@ namespace dao
                 }
                 foreach (String profileName in profileList)
                 {
-                    String profilePath = $"{basePath}\\{profileName}\\{filename}";
+                    String profilePath = $"{UserDataPath}\\{profileName}\\{filename}";
                     result.AddRange(ReadsCookieFile(profileName, profilePath, host));
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed : {basePath} : " + ex.Message);
+                Console.WriteLine($"Failed : {UserDataPath} : " + ex.Message);
             }
             return result;
+        }
+
+        private string _decryptWithKey(byte[] message, byte[] key, int nonSecretPayloadLength)
+        {
+            const int KEY_BIT_SIZE = 256;
+            const int MAC_BIT_SIZE = 128;
+            const int NONCE_BIT_SIZE = 96;
+
+            if (key == null || key.Length != KEY_BIT_SIZE / 8)
+                throw new ArgumentException(String.Format("Key needs to be {0} bit!", KEY_BIT_SIZE), "key");
+            if (message == null || message.Length == 0)
+                throw new ArgumentException("Message required!", "message");
+
+            using (var cipherStream = new MemoryStream(message))
+            using (var cipherReader = new BinaryReader(cipherStream))
+            {
+                var nonSecretPayload = cipherReader.ReadBytes(nonSecretPayloadLength);
+                var nonce = cipherReader.ReadBytes(NONCE_BIT_SIZE / 8);
+                var cipher = new GcmBlockCipher(new AesEngine());
+                var parameters = new AeadParameters(new KeyParameter(key), MAC_BIT_SIZE, nonce);
+                cipher.Init(false, parameters);
+                var cipherText = cipherReader.ReadBytes(message.Length);
+                var plainText = new byte[cipher.GetOutputSize(cipherText.Length)];
+                try
+                {
+                    var len = cipher.ProcessBytes(cipherText, 0, cipherText.Length, plainText, 0);
+                    cipher.DoFinal(plainText, len);
+                }
+                catch (InvalidCipherTextException)
+                {
+                    return null;
+                }
+                return Encoding.Default.GetString(plainText);
+            }
         }
 
     }

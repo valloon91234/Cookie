@@ -9,23 +9,29 @@ namespace dao
     /// <summary>
     /// http://raidersec.blogspot.com/2013/06/how-browsers-store-your-passwords-and.html#chrome_decryption
     /// </summary>
-    class ChromeSogou : BaseChrome, IReader
+    class ChromeSogou : IReader
     {
         public string BrowserName { get { return "SogouExplorer"; } }
 
+        private readonly ChromeModel Model;
+
+        public ChromeSogou()
+        {
+            string LOCAL_PATH = ChromeModel.GetAppDataRoamingPath();
+            string userDataPath = Path.Combine(LOCAL_PATH, @"SogouExplorer\Webkit");
+            Model = new ChromeModel(userDataPath);
+        }
+
         public IEnumerable<PassModel> Passwords()
         {
-            String LOCAL_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return base.Reads(Path.Combine(LOCAL_PATH, @"Google\Chrome\User Data"));
+            return Model.ReadPassword();
         }
 
-        public IEnumerable<Cookie> Cookies(String host = null)
+        public IEnumerable<Cookie> Cookies(string host = null)
         {
-            String userData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\SogouExplorer\Webkit";
-            return base.ReadsCookie(userData, host);
+            return Model.ReadCookie(host);
         }
+
     }
-
-
 
 }
