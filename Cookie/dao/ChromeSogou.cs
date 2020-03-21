@@ -13,18 +13,18 @@ namespace dao
     {
         public string BrowserName { get { return "SogouExplorer"; } }
 
-        private readonly ChromeModel Model;
+        private readonly BaseChrome Model;
 
         public ChromeSogou()
         {
-            string LOCAL_PATH = ChromeModel.GetAppDataRoamingPath();
+            string LOCAL_PATH = BaseChrome.GetAppDataRoamingPath();
             string userDataPath = Path.Combine(LOCAL_PATH, @"SogouExplorer\Webkit");
-            Model = new ChromeModel(userDataPath);
+            Model = new BaseChrome(userDataPath);
         }
 
-        public IEnumerable<PassModel> Passwords()
+        public IEnumerable<PassModel> Passwords(string host = null)
         {
-            return Model.ReadPassword();
+            return Model.ReadPassword(host);
         }
 
         public IEnumerable<Cookie> Cookies(string host = null)

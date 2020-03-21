@@ -13,18 +13,18 @@ namespace dao
     {
         public string BrowserName { get { return "ChromeCore"; } }
 
-        private readonly ChromeModel Model;
+        private readonly BaseChrome Model;
 
         public ChromeCore()
         {
-            string LOCAL_PATH = ChromeModel.GetAppDataLocalPath();
+            string LOCAL_PATH = BaseChrome.GetAppDataLocalPath();
             string userDataPath = Path.Combine(LOCAL_PATH, @"ChromeCore\User Data");
-            Model = new ChromeModel(userDataPath);
+            Model = new BaseChrome(userDataPath);
         }
 
-        public IEnumerable<PassModel> Passwords()
+        public IEnumerable<PassModel> Passwords(string host = null)
         {
-            return Model.ReadPassword();
+            return Model.ReadPassword(host);
         }
 
         public IEnumerable<Cookie> Cookies(string host = null)

